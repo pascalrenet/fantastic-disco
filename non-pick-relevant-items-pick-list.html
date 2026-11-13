@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Non-Pick-Relevant Items to a Pick List | S/4HANA Cloud Knowledge Share</title>
+  <meta name="description" content="Configuration and extensibility guide for adding non-pick-relevant delivery items to the SAP S/4HANA Cloud picking list using BAdI LE_SHP_PICKLIST_MODIFY_ITEMS." />
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --panel: #121722;
+      --panel2: #171d2a;
+      --text: #f6f8fb;
+      --muted: #bcc6d6;
+      --pink: #ff0b8a;
+      --orange: #ff6b00;
+      --lime: #b8ff3b;
+      --cyan: #6ad9ff;
+      --warning: #ffcf5a;
+      --danger: #ff7a7a;
+      --line: rgba(255,255,255,.09);
+      --radius: 22px;
+      --max: 1160px;
+      --shadow: 0 20px 50px rgba(0,0,0,.28);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(255,11,138,.12), transparent 30%),
+        radial-gradient(circle at 90% 0%, rgba(255,107,0,.11), transparent 28%),
+        var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+    a { color: inherit; text-decoration: none; }
+    code, pre { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+    .container { width: min(var(--max), calc(100% - 32px)); margin: 0 auto; }
+
+    .site-header {
+      position: sticky; top: 0; z-index: 30;
+      background: rgba(11,13,18,.82);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--line);
+    }
+    .header-row {
+      min-height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 800; letter-spacing: -.025em; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(135deg,var(--pink),var(--orange)); box-shadow: 0 0 20px rgba(255,11,138,.55); }
+    .nav { display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); font-size: .93rem; }
+    .nav a:hover { color: white; }
+
+    .hero { padding: 44px 0 22px; }
+    .hero-card {
+      position: relative; overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      background: linear-gradient(135deg, rgba(255,11,138,.16), rgba(255,107,0,.10) 46%, rgba(255,255,255,.025) 70%);
+      box-shadow: var(--shadow);
+      padding: 42px;
+    }
+    .hero-card::after {
+      content: ""; position: absolute; width: 300px; height: 300px; right: -100px; top: -120px;
+      border: 1px solid rgba(255,255,255,.12); border-radius: 50%;
+      box-shadow: 0 0 0 60px rgba(255,255,255,.018), 0 0 0 120px rgba(255,255,255,.012);
+    }
+    .eyebrow { display: inline-flex; gap: 8px; align-items: center; color: var(--muted); font-size: .85rem; padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; background: rgba(255,255,255,.04); }
+    h1 { font-size: clamp(2.5rem, 6vw, 5.2rem); line-height: .94; letter-spacing: -.055em; margin: 18px 0 18px; max-width: 12ch; }
+    .hero p { max-width: 760px; color: var(--muted); font-size: 1.08rem; margin: 0; }
+    .hero-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+    .pill { padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,.055); border: 1px solid var(--line); font-size: .86rem; color: #dce3ed; }
+
+    .section { padding: 30px 0; }
+    .section h2 { margin: 0 0 10px; font-size: clamp(1.65rem,3vw,2.45rem); letter-spacing: -.04em; }
+    .section-lead { margin: 0 0 20px; color: var(--muted); max-width: 820px; }
+
+    .toc {
+      display: grid; grid-template-columns: repeat(4,1fr); gap: 12px;
+      margin: 10px 0 8px;
+    }
+    .toc a { padding: 14px 16px; border-radius: 16px; border: 1px solid var(--line); background: rgba(255,255,255,.035); color: var(--muted); }
+    .toc a:hover { background: rgba(255,255,255,.065); color: #fff; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .card {
+      border: 1px solid var(--line); border-radius: var(--radius); background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.022));
+      padding: 22px; box-shadow: var(--shadow);
+    }
+    .card h3 { margin: 0 0 8px; letter-spacing: -.02em; }
+    .card p { margin: 0; color: var(--muted); }
+    .number { width: 38px; height: 38px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; margin-bottom: 14px; background: linear-gradient(135deg, rgba(255,11,138,.3), rgba(255,107,0,.25)); border: 1px solid var(--line); }
+
+    .callout { border-radius: 18px; padding: 18px 20px; margin: 18px 0; border: 1px solid var(--line); background: rgba(255,255,255,.035); }
+    .callout strong { color: white; }
+    .callout.info { border-left: 4px solid var(--cyan); }
+    .callout.warning { border-left: 4px solid var(--warning); }
+    .callout.success { border-left: 4px solid var(--lime); }
+
+    .figure { margin: 22px 0; padding: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.025); border-radius: 20px; }
+    .figure img { display: block; width: 100%; height: auto; border-radius: 13px; background: white; }
+    .figure.small img { width: min(100%, 720px); }
+    figcaption { color: var(--muted); font-size: .9rem; padding: 10px 4px 2px; }
+
+    .code-wrap { margin: 18px 0; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); background: #080a0f; }
+    .code-head { display: flex; justify-content: space-between; gap: 14px; align-items: center; padding: 10px 14px; background: rgba(255,255,255,.045); border-bottom: 1px solid var(--line); font-size: .83rem; color: var(--muted); }
+    .copy { border: 1px solid var(--line); background: rgba(255,255,255,.055); color: white; border-radius: 9px; padding: 6px 10px; cursor: pointer; }
+    pre { margin: 0; padding: 18px; overflow-x: auto; font-size: .89rem; line-height: 1.55; color: #ecf2f8; tab-size: 2; }
+    .kw { color: #ff8cc6; }
+    .cm { color: #8d9aac; }
+
+    .steps { counter-reset: step; display: grid; gap: 14px; }
+    .step { position: relative; padding: 18px 18px 18px 66px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.03); }
+    .step::before { counter-increment: step; content: counter(step); position: absolute; left: 18px; top: 18px; width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; background: linear-gradient(135deg,var(--pink),var(--orange)); }
+    .step h3 { margin: 0 0 6px; font-size: 1.02rem; }
+    .step p { margin: 0; color: var(--muted); }
+
+    .ref-list { display: grid; gap: 12px; }
+    .ref { display: block; padding: 16px 18px; border: 1px solid var(--line); border-radius: 16px; background: rgba(255,255,255,.035); }
+    .ref:hover { background: rgba(255,255,255,.065); }
+    .ref-title { font-weight: 750; }
+    .ref-desc { color: var(--muted); font-size: .92rem; margin-top: 4px; }
+
+    footer { padding: 28px 0 54px; color: var(--muted); font-size: .9rem; }
+    .footer-row { border-top: 1px solid var(--line); padding-top: 20px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+    @media (max-width: 900px) { .toc { grid-template-columns: 1fr 1fr; } .grid-2 { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .hero-card { padding: 26px 22px; } .toc { grid-template-columns: 1fr; } .nav { display: none; } h1 { max-width: 100%; } }
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-row">
+    <a href="index.html" class="brand"><span class="dot"></span><span>Pascal's S/4HANA Cloud Knowledge Share</span></a>
+    <nav class="nav" aria-label="Page navigation">
+      <a href="#overview">Overview</a>
+      <a href="#implementation">Implementation</a>
+      <a href="#ordering">Ordering</a>
+      <a href="#references">SAP Help</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <div class="hero-card">
+        <div class="eyebrow">SAP S/4HANA Cloud Public Edition · Delivery Management · Output Extensibility</div>
+        <h1>Add non-pick-relevant items to the Pick List</h1>
+        <p>Use the delivery pick-list BAdI to enrich the form data with delivery items that are normally omitted because they are not relevant for picking. This guide shows the safe pattern: preserve the standard pick-relevant items, append only missing delivery items, then optionally restore delivery-item order.</p>
+        <div class="hero-meta">
+          <span class="pill">BAdI: LE_SHP_PICKLIST_MODIFY_ITEMS</span>
+          <span class="pill">Interface: IF_LE_SHP_PICKLST_MODIFY_ITEMS</span>
+          <span class="pill">Form: Picking List</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="overview">
+    <div class="container">
+      <h2>What problem does this solve?</h2>
+      <p class="section-lead">The standard picking list is designed around items that need to be picked. In scenarios such as kits, structured products, packaging-related items, or other delivery structures, you may still want non-pick-relevant items to appear on the printed form for operational clarity.</p>
+
+      <div class="toc">
+        <a href="#baseline">1. Understand the baseline</a>
+        <a href="#implementation">2. Add missing items</a>
+        <a href="#ordering">3. Restore item order</a>
+        <a href="#references">4. Check SAP Help</a>
+      </div>
+
+      <div class="callout info"><strong>Important:</strong> SAP documents <code>LE_SHP_PICKLIST_MODIFY_ITEMS</code> as the BAdI for modifying standard and custom fields in a delivery picking list. The corresponding interface is <code>IF_LE_SHP_PICKLST_MODIFY_ITEMS</code>.</div>
+    </div>
+  </section>
+
+  <section class="section" id="baseline">
+    <div class="container">
+      <h2>1. Understand the baseline</h2>
+      <p class="section-lead">In the source example, the outbound delivery contains five items, while the standard pick-list output contains only two pick-relevant items. That difference is the starting point for the enhancement.</p>
+
+      <figure class="figure">
+        <img src="imagery/delivery-five-items.png" alt="Outbound delivery example showing five delivery items" />
+        <figcaption>Example delivery: five items exist in the outbound delivery.</figcaption>
+      </figure>
+
+      <figure class="figure small">
+        <img src="imagery/picklist-two-items.png" alt="Pick-list form data showing only two DeliveryItemNode entries" />
+        <figcaption>Standard form data: only two delivery-item nodes are included because only those items are pick relevant.</figcaption>
+      </figure>
+
+      <div class="grid-2">
+        <div class="card"><div class="number">A</div><h3><code>PRINT_DELIVERY_ITEMS_IN</code></h3><p>The source notes that this table contains the picking-relevant items already selected for the standard pick-list output.</p></div>
+        <div class="card"><div class="number">B</div><h3><code>ALL_DELIVERY_ITEMS_IN</code></h3><p>This table provides the broader set of delivery items and can be used to identify items that are missing from the standard print list.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="implementation">
+    <div class="container">
+      <h2>2. Preserve standard items, then append only missing items</h2>
+      <p class="section-lead">The key rule from the source material is to copy the standard picking-relevant items first. After that, compare all delivery items with the existing print list and append only items that are not already present.</p>
+
+      <div class="steps">
+        <div class="step"><h3>Copy the standard pick-list items first</h3><p>This preserves the output that SAP already determined as pick relevant.</p></div>
+        <div class="step"><h3>Loop over all delivery items</h3><p>Use the broader delivery-item input table as the candidate list.</p></div>
+        <div class="step"><h3>Check whether each item is already present</h3><p>Compare by delivery document and delivery document item to avoid duplicating the standard entries.</p></div>
+        <div class="step"><h3>Append only missing items</h3><p>Map the source structure into the pick-list item structure and add the missing entry to the output table.</p></div>
+      </div>
+
+      <div class="code-wrap">
+        <div class="code-head"><span>ABAP example - de-duplicated approach</span><button class="copy" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="cm">" Step 1: mandatory - keep the standard picking-relevant items</span>
+MOVE-CORRESPONDING print_delivery_items_in
+  TO print_delivery_items_out.
+
+DATA ls_picklist TYPE shp_fdp_dlv_picking_item.
+
+<span class="cm">" Step 2: append only items not already in the standard print list</span>
+LOOP AT all_delivery_items_in ASSIGNING FIELD-SYMBOL(&lt;fs_item&gt;).
+
+  READ TABLE print_delivery_items_in
+    WITH KEY deliverydocument     = &lt;fs_item&gt;-deliverydocument
+             deliverydocumentitem = &lt;fs_item&gt;-deliverydocumentitem
+    TRANSPORTING NO FIELDS.
+
+  IF sy-subrc &lt;&gt; 0.
+    CLEAR ls_picklist.
+    MOVE-CORRESPONDING &lt;fs_item&gt; TO ls_picklist.
+    APPEND ls_picklist TO print_delivery_items_out.
+  ENDIF.
+
+ENDLOOP.</code></pre>
+      </div>
+
+      <div class="callout success"><strong>Result:</strong> in the five-item example, the output can contain five unique delivery items instead of only the two pick-relevant items.</div>
+
+      <figure class="figure small">
+        <img src="imagery/picklist-five-items.png" alt="Pick-list form data showing five DeliveryItemNode entries after enhancement" />
+        <figcaption>After de-duplication, the form data contains five delivery-item nodes - one for each delivery item in the example.</figcaption>
+      </figure>
+
+      <div class="callout warning"><strong>Avoid blindly appending all items.</strong> The source example shows that copying the standard list and then appending a broad set without checking for existing entries can produce seven nodes in the five-item scenario: the five delivery items plus the two pick-relevant items again.</div>
+    </div>
+  </section>
+
+  <section class="section" id="ordering">
+    <div class="container">
+      <h2>3. Restore delivery-item order when needed</h2>
+      <p class="section-lead">Because the standard pick-relevant items are copied first and the missing items are appended afterwards, the resulting sequence may no longer follow the delivery item numbers. The source example notes this for a higher-level material that appears later than expected.</p>
+
+      <div class="code-wrap">
+        <div class="code-head"><span>Optional sort</span><button class="copy" onclick="copyCode(this)">Copy</button></div>
+<pre><code><span class="cm">" Optional: restore natural delivery/item sequence</span>
+SORT print_delivery_items_out
+  BY deliverydocument deliverydocumentitem.</code></pre>
+      </div>
+
+      <figure class="figure small">
+        <img src="imagery/item-ordering-detail.png" alt="Form-data example highlighting DeliveryDocumentItem ordering" />
+        <figcaption>The form-data example exposes <code>DeliveryDocumentItem</code>, which can be used to order the output consistently with the delivery.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <h2>Implementation checklist</h2>
+      <div class="grid-2">
+        <div class="card"><div class="number">1</div><h3>Confirm the requirement</h3><p>Decide whether the business wants every delivery item printed, or only a specific subset of non-pick-relevant items.</p></div>
+        <div class="card"><div class="number">2</div><h3>Implement the BAdI</h3><p>Use the custom logic implementation for <code>LE_SHP_PICKLIST_MODIFY_ITEMS</code> and retain the mandatory standard item copy.</p></div>
+        <div class="card"><div class="number">3</div><h3>Prevent duplicates</h3><p>Use document and item keys to test whether an item is already part of <code>PRINT_DELIVERY_ITEMS_IN</code>.</p></div>
+        <div class="card"><div class="number">4</div><h3>Test form output</h3><p>Re-create the picking-list output and validate item count, sequence, descriptions, quantities, and any parent/child structure relevant to the scenario.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="references">
+    <div class="container">
+      <h2>SAP Help references</h2>
+      <p class="section-lead">These links provide the official SAP context for the BAdI, the picking-list output, and supported output extensibility.</p>
+      <div class="ref-list">
+        <a class="ref" target="_blank" rel="noopener" href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/aff0b3f5f46c42a2b2c0fabfc233bab2/78ac6e6632494a8dbc0a63c8b63f6d77.html">
+          <div class="ref-title">Business Add-Ins (BAdIs) for Delivery Management</div>
+          <div class="ref-desc">SAP lists <code>LE_SHP_PICKLIST_MODIFY_ITEMS</code> and interface <code>IF_LE_SHP_PICKLST_MODIFY_ITEMS</code> for modifying standard and custom fields in a delivery picking list.</div>
+        </a>
+        <a class="ref" target="_blank" rel="noopener" href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/aff0b3f5f46c42a2b2c0fabfc233bab2/a5f66e56ba494f67ba2c37a91f945720.html">
+          <div class="ref-title">Picking List - Delivery Management</div>
+          <div class="ref-desc">Official description of the S/4HANA Cloud picking-list output, supported outbound-delivery usage, and extensibility information.</div>
+        </a>
+        <a class="ref" target="_blank" rel="noopener" href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/aff0b3f5f46c42a2b2c0fabfc233bab2/65f5fd6ac102431fab0974c19c24f220.html">
+          <div class="ref-title">Output Extensibility</div>
+          <div class="ref-desc">SAP guidance for extending delivery output forms, including the picking-list form template <code>FDP_V2_PICKING_LIST</code> and the Print Delivery Pick List data source.</div>
+        </a>
+      </div>
+      <div class="callout info"><strong>Scope note:</strong> this page explains an implementation pattern derived from the provided source document. Validate the logic against your own release, item categories, delivery structures, and output requirements before productive use.</div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container footer-row">
+    <div>Pascal's S/4HANA Cloud Knowledge Share</div>
+    <div>Educational configuration guide · SAP S/4HANA Cloud Public Edition</div>
+  </div>
+</footer>
+
+<script>
+function copyCode(button) {
+  const code = button.closest('.code-wrap').querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => {
+    const original = button.textContent;
+    button.textContent = 'Copied';
+    setTimeout(() => button.textContent = original, 1200);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Using a Different Ship-To Address in a Sales Order | Pascal's S/4HANA Cloud Knowledge Share</title>
+  <meta name="description" content="How to create a sales order for a business partner with multiple addresses in SAP S/4HANA Cloud, including the OData V2 BusinessPartnerAddressUUID approach and guidance for OData V4." />
+  <style>
+    :root {
+      --bg:#090b10; --panel:#111620; --panel2:#161d29; --text:#f7f8fb; --muted:#b8c2d0;
+      --pink:#ff0a86; --orange:#ff6a00; --lime:#c9ff3b; --cyan:#52b8ff;
+      --line:rgba(255,255,255,.09); --shadow:0 22px 55px rgba(0,0,0,.34);
+      --radius:24px; --max:1160px;
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth}
+    body{margin:0;background:
+      radial-gradient(circle at 4% 0%,rgba(255,10,134,.12),transparent 26%),
+      radial-gradient(circle at 96% 3%,rgba(255,106,0,.12),transparent 24%),var(--bg);
+      color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}
+    a{color:inherit}.container{width:min(var(--max),calc(100% - 34px));margin:auto}
+    header{position:sticky;top:0;z-index:20;background:rgba(9,11,16,.82);backdrop-filter:blur(18px);border-bottom:1px solid var(--line)}
+    .header-row{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:15px 0}
+    .brand{display:flex;align-items:center;gap:11px;text-decoration:none;font-weight:800;letter-spacing:-.025em}
+    .dot{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--orange));box-shadow:0 0 20px rgba(255,10,134,.55)}
+    nav{display:flex;gap:18px;flex-wrap:wrap;font-size:.92rem;color:var(--muted)} nav a{text-decoration:none} nav a:hover{color:#fff}
+    .hero{padding:58px 0 34px}.hero-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:18px}
+    .hero-main,.hero-side,.card,.figure,.code-card,.ref-card{border:1px solid var(--line);box-shadow:var(--shadow)}
+    .hero-main{position:relative;overflow:hidden;border-radius:30px;padding:38px;background:linear-gradient(135deg,#ff0785 0%,#ff168e 48%,#ff6a00 100%);color:#08090b;min-height:470px}
+    .hero-main:after{content:"";position:absolute;right:-80px;bottom:-130px;width:360px;height:360px;border-radius:50%;border:1px solid rgba(0,0,0,.22);box-shadow:0 0 0 44px rgba(0,0,0,.035),0 0 0 88px rgba(0,0,0,.025)}
+    .kicker{font-size:.78rem;font-weight:900;letter-spacing:.2em;text-transform:uppercase;margin-bottom:18px}
+    h1{font-size:clamp(3rem,7vw,6.4rem);line-height:.87;letter-spacing:-.065em;margin:0;max-width:9ch;font-weight:900}
+    .hero-main p{font-size:1.15rem;max-width:55ch;margin:26px 0 0;font-weight:650}
+    .hero-side{border-radius:30px;background:#050607;padding:28px;display:flex;flex-direction:column;justify-content:space-between;min-height:470px}
+    .hero-side .label{color:var(--pink);font-size:.78rem;font-weight:900;letter-spacing:.18em;text-transform:uppercase}
+    .hero-side h2{font-size:2rem;line-height:1.05;letter-spacing:-.04em;margin:10px 0 14px}.hero-side p{color:var(--muted);margin:0}
+    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}.chip{padding:8px 11px;border-radius:999px;border:1px solid var(--line);font-size:.82rem;color:#dce3ec;background:rgba(255,255,255,.04)}
+    section{padding:30px 0}.section-head{display:grid;grid-template-columns:.7fr 1.3fr;gap:28px;margin-bottom:20px;align-items:start}
+    .num{color:var(--pink);font-weight:900;letter-spacing:.14em;font-size:.78rem;text-transform:uppercase}.section-head h2{font-size:clamp(2rem,4.5vw,3.3rem);line-height:1;letter-spacing:-.055em;margin:6px 0 0}.section-head p{color:var(--muted);font-size:1.04rem;margin:0}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.018));border-radius:var(--radius);padding:24px}
+    .callout{border-left:4px solid var(--lime);padding:16px 18px;background:rgba(201,255,59,.06);border-radius:0 16px 16px 0;margin:18px 0;color:#e9f4d5}
+    .warning{border-left-color:var(--orange);background:rgba(255,106,0,.07);color:#ffe9d8}
+    .info{border-left-color:var(--cyan);background:rgba(82,184,255,.07);color:#dff2ff}
+    .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.step{padding:22px;border-radius:20px;background:var(--panel);border:1px solid var(--line)}.step b{display:block;color:var(--pink);font-size:.75rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px}.step h3{margin:0 0 8px;font-size:1.13rem}.step p{margin:0;color:var(--muted);font-size:.94rem}
+    .figure{border-radius:22px;overflow:hidden;background:#0d1118;margin:18px 0}.figure img{display:block;width:100%;height:auto}.caption{padding:12px 16px;color:var(--muted);font-size:.88rem;border-top:1px solid var(--line)}
+    pre{margin:0;overflow:auto;padding:24px;background:#07090d;color:#e8edf5;font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre}.code-card{border-radius:22px;overflow:hidden;background:#07090d;margin:18px 0}.code-title{display:flex;justify-content:space-between;gap:12px;padding:13px 18px;background:#141a23;border-bottom:1px solid var(--line);font-size:.85rem;color:var(--muted)}
+    code.inline{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:rgba(255,255,255,.07);padding:2px 6px;border-radius:6px;color:#fff}
+    .comparison{display:grid;grid-template-columns:1fr 1fr;gap:16px}.compare-card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:23px}.compare-card h3{margin:0 0 10px;font-size:1.28rem}.compare-card p{color:var(--muted)}.tag{display:inline-block;padding:5px 9px;border-radius:999px;font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;background:rgba(255,10,134,.13);color:#ff70b4;margin-bottom:12px}
+    .refs{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.ref-card{border-radius:20px;background:var(--panel);padding:20px;text-decoration:none;transition:.2s transform,.2s border-color}.ref-card:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.2)}.ref-card small{display:block;color:var(--pink);font-weight:800;text-transform:uppercase;letter-spacing:.12em;margin-bottom:7px}.ref-card strong{display:block;font-size:1.05rem;margin-bottom:6px}.ref-card span{color:var(--muted);font-size:.9rem}
+    ul{color:var(--muted)} li+li{margin-top:7px} strong{color:#fff}
+    footer{padding:28px 0 50px;color:var(--muted);font-size:.9rem}.footer-inner{padding-top:20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}
+    @media(max-width:860px){.hero-grid,.section-head,.comparison{grid-template-columns:1fr}.steps,.refs{grid-template-columns:1fr}.hero-main,.hero-side{min-height:auto}.hero-main{padding:28px}h1{max-width:none}.header-row{align-items:flex-start;flex-direction:column}.section-head{gap:10px}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="container header-row">
+    <a class="brand" href="index.html"><span class="dot"></span>Pascal's S/4HANA Cloud Knowledge Share</a>
+    <nav><a href="#overview">Overview</a><a href="#v2">OData V2</a><a href="#v4">OData V4</a><a href="#references">SAP Help</a></nav>
+  </div>
+</header>
+<main>
+  <div class="container hero">
+    <div class="hero-grid">
+      <div class="hero-main">
+        <div class="kicker">Sales Orders · Multiple Address Handling</div>
+        <h1>Use a different Ship-To address.</h1>
+        <p>Create a sales order for a business partner that has multiple master-data addresses, and deliberately select which address should be used for the Ship-To partner.</p>
+      </div>
+      <aside class="hero-side">
+        <div><div class="label">Configuration pattern</div><h2>Same business partner. Different address.</h2><p>The key is to identify the required address and then use the API mechanism appropriate to the Sales Order API version.</p></div>
+        <div class="chips"><span class="chip">SAP S/4HANA Cloud</span><span class="chip">Sales Order</span><span class="chip">Business Partner</span><span class="chip">OData V2 / V4</span></div>
+      </aside>
+    </div>
+  </div>
+
+  <section id="overview"><div class="container">
+    <div class="section-head"><div><div class="num">01 · Scenario</div><h2>Business partner with multiple addresses</h2></div><p>A customer can have several maintained addresses. The requirement here is not to create a different Ship-To business partner, but to use a specific address belonging to the same business partner when the sales order is created.</p></div>
+    <div class="steps">
+      <div class="step"><b>Step 1</b><h3>Identify the address</h3><p>Read the business partner's addresses and locate the address you want to use.</p></div>
+      <div class="step"><b>Step 2</b><h3>Capture its UUID</h3><p>For the OData V2 pattern, obtain the address UUID from the Business Partner API.</p></div>
+      <div class="step"><b>Step 3</b><h3>Create the order</h3><p>Pass the selected address on the Ship-To partner when posting the sales order.</p></div>
+    </div>
+    <div class="figure"><img src="imagery/business-partner-multiple-addresses.png" alt="Business partner with multiple maintained addresses"><div class="caption">Example: one business partner with several valid addresses. The intended Ship-To address is selected from this list.</div></div>
+  </div></section>
+
+  <section><div class="container">
+    <div class="section-head"><div><div class="num">02 · Find the address UUID</div><h2>Query Business Partner addresses</h2></div><p>The source example queries the Business Partner OData V2 service and reads the address UUID for the required address. SAP's Sales Order V2 documentation explicitly points to the Business Partner API as the way to retrieve this UUID.</p></div>
+    <div class="card">
+      <p><strong>Example request pattern</strong></p>
+      <div class="code-card"><div class="code-title"><span>OData V2 · Business Partner</span><span>GET</span></div><pre>GET /sap/opu/odata/sap/API_BUSINESS_PARTNER/
+    A_BusinessPartner('&lt;BP_ID&gt;')/to_BusinessPartnerAddress</pre></div>
+      <div class="callout info"><strong>What you are looking for:</strong> the UUID associated with the exact address you want to use. In the API response this identifies the individual business-partner address, not the business partner itself.</div>
+    </div>
+    <div class="figure"><img src="imagery/business-partner-address-uuid-response.png" alt="Business Partner API response showing address UUID and street"><div class="caption">Example response from the source material: the address UUID and address details can be matched before the UUID is used in sales-order creation.</div></div>
+  </div></section>
+
+  <section id="v2"><div class="container">
+    <div class="section-head"><div><div class="num">03 · OData V2</div><h2>Pass BusinessPartnerAddressUUID on the Ship-To partner</h2></div><p>For the Sales Order (A2X, OData V2) API, SAP documents <code class="inline">BusinessPartnerAddressUUID</code> specifically for creating orders for business partners with multiple addresses.</p></div>
+    <div class="code-card"><div class="code-title"><span>Sales Order (A2X, OData V2)</span><span>POST /A_SalesOrder</span></div><pre>{
+  "SalesOrderType": "OR",
+  "SalesOrganization": "1710",
+  "DistributionChannel": "10",
+  "OrganizationDivision": "00",
+  "SoldToParty": "&lt;BP_ID&gt;",
+  "PurchaseOrderByCustomer": "MULTI-ADDRESS-DEMO",
+  "to_Partner": [
+    {
+      "PartnerFunction": "SH",
+      "Customer": "&lt;BP_ID&gt;",
+      "BusinessPartnerAddressUUID": "&lt;ADDRESS_UUID&gt;"
+    }
+  ],
+  "to_Item": [
+    {
+      "Material": "&lt;MATERIAL&gt;",
+      "RequestedQuantity": "1",
+      "RequestedQuantityUnit": "PC"
+    }
+  ]
+}</pre></div>
+    <div class="callout"><strong>Expected result:</strong> the Ship-To partner remains the same business partner number, while the address on the sales order reflects the address identified by the UUID.</div>
+    <div class="figure"><img src="imagery/sales-order-ship-to-address-verification.png" alt="Sales order showing same business partner with a different ship-to address"><div class="caption">Verification in the sales order: the Ship-To business partner is unchanged, while the displayed Ship-To address reflects the selected address.</div></div>
+  </div></section>
+
+  <section id="v4"><div class="container">
+    <div class="section-head"><div><div class="num">04 · OData V4</div><h2>Do not reuse the V2 payload unchanged</h2></div><p>The source material reports that adding <code class="inline">BusinessPartnerAddressUUID</code> to the OData V4 request failed. Current SAP Help shows a different V4 pattern: partner address data can be supplied as document-specific address fields during the deep insert.</p></div>
+    <div class="comparison">
+      <div class="compare-card"><span class="tag">V2 pattern</span><h3>Select a master-data address by UUID</h3><p>Use <code class="inline">BusinessPartnerAddressUUID</code> in <code class="inline">to_Partner</code>. SAP's dedicated V2 multiple-address example documents this mechanism.</p></div>
+      <div class="compare-card"><span class="tag">V4 pattern</span><h3>Use the V4 partner-address structure</h3><p>SAP's V4 create-request documentation demonstrates creation with partner address fields. Treat V2 and V4 as different request models rather than assuming the same property is accepted in both.</p></div>
+    </div>
+    <div class="callout warning"><strong>Important:</strong> the PDF's test result should be read as “the V2 UUID payload pattern did not work when tried against V4,” not as a general statement that OData V4 cannot work with different partner addresses. SAP's current V4 documentation explicitly includes sales-order creation with partner address data.</div>
+  </div></section>
+
+  <section><div class="container">
+    <div class="section-head"><div><div class="num">05 · Choosing an API</div><h2>Check capability differences before standardising</h2></div><p>SAP maintains a feature-comparison page for the Sales Order A2X OData V2, A2X OData V4, and A2A APIs. The APIs overlap substantially, but they are not feature-identical.</p></div>
+    <div class="card">
+      <ul>
+        <li>Choose an API based on the complete business scenario, not only the address requirement.</li>
+        <li>Check the SAP Help feature comparison for capabilities that matter to your implementation.</li>
+        <li>For example, SAP's current comparison lists <strong>variant configuration</strong> for OData V4 but not OData V2.</li>
+        <li>Keep API-version-specific payload examples separate in implementation documentation and test collections.</li>
+      </ul>
+    </div>
+  </div></section>
+
+  <section id="references"><div class="container">
+    <div class="section-head"><div><div class="num">06 · Official references</div><h2>SAP Help</h2></div><p>Use the current SAP documentation as the source of truth for field availability and request structures in your target release.</p></div>
+    <div class="refs">
+      <a class="ref-card" target="_blank" rel="noopener" href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/ff846779ead940cb96025b25bb23c28a.html?locale=en-US"><small>SAP Help · OData V2</small><strong>Create Sales Order for Business Partner with Multiple Addresses</strong><span>Documents the BusinessPartnerAddressUUID approach and how to obtain the UUID.</span></a>
+      <a class="ref-card" target="_blank" rel="noopener" href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/9c75cb47849149ca8a5c644c98965ff1.html?locale=en-US"><small>SAP Help · OData V4</small><strong>Create Requests</strong><span>Includes a create-sales-order example with partner address data using the V4 service.</span></a>
+      <a class="ref-card" target="_blank" rel="noopener" href="https://help.sap.com/docs/SAP_S4HANA_CLOUD/03c04db2a7434731b7fe21dca77440da/82b46ca209f94853b3cf7e3419817ea7.html?locale=en-US"><small>SAP Help · Comparison</small><strong>Feature Comparison for Sales Order APIs</strong><span>Compare capabilities across Sales Order A2X OData V2, A2X OData V4 and A2A.</span></a>
+      <a class="ref-card" target="_blank" rel="noopener" href="https://me.sap.com/notes/3757274"><small>SAP for Me · Note</small><strong>SAP Note 3757274</strong><span>Referenced in the source material. Access may require an authenticated SAP user.</span></a>
+    </div>
+  </div></section>
+</main>
+<footer><div class="container footer-inner"><div>Pascal's S/4HANA Cloud Knowledge Share</div><div>Educational configuration guide · SAP S/4HANA Cloud</div></div></footer>
+</body>
+</html>

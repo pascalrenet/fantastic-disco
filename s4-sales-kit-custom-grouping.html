@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>S/4HANA Cloud | Sales Kit - Custom Grouping</title>
+  <meta name="description" content="Step-by-step guide for implementing Sales Kit custom grouping in SAP S/4HANA Cloud Public Edition." />
+  <style>
+    :root {
+      --bg:#0b0d12;
+      --bg2:#111722;
+      --panel:#141b27;
+      --panel2:#1a2230;
+      --text:#f7f8fb;
+      --muted:#b9c3d0;
+      --pink:#ff0b8a;
+      --orange:#ff6b00;
+      --accent:#a8ff2a;
+      --line:rgba(255,255,255,.09);
+      --shadow:0 18px 48px rgba(0,0,0,.34);
+      --radius:22px;
+      --max:1180px;
+    }
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--text);background:
+      radial-gradient(circle at 10% 0%,rgba(255,11,138,.10),transparent 25%),
+      radial-gradient(circle at 90% 0%,rgba(255,107,0,.10),transparent 25%),var(--bg);line-height:1.6}
+    a{color:inherit;text-decoration:none}
+    code,pre{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+    .container{width:min(var(--max),calc(100% - 32px));margin:0 auto}
+    .site-header{position:sticky;top:0;z-index:30;background:rgba(11,13,18,.82);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}
+    .header-row{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:15px 0}
+    .brand{font-weight:800;letter-spacing:-.025em;display:flex;align-items:center;gap:10px}
+    .dot{width:12px;height:12px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--orange));box-shadow:0 0 18px rgba(255,11,138,.5)}
+    .nav{display:flex;gap:18px;color:var(--muted);font-size:.93rem;flex-wrap:wrap}
+    .nav a:hover{color:var(--text)}
+    .hero{padding:48px 0 30px}
+    .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:stretch}
+    .hero-card,.toc-card{border:1px solid var(--line);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));box-shadow:var(--shadow)}
+    .hero-card{padding:34px;min-height:360px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;position:relative}
+    .hero-card:after{content:"";position:absolute;inset:auto -90px -110px auto;width:320px;height:320px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--orange));filter:blur(10px);opacity:.20}
+    .eyebrow{display:inline-flex;padding:7px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted);font-size:.85rem;background:rgba(255,255,255,.04)}
+    h1{font-size:clamp(2.7rem,7vw,5.7rem);line-height:.92;letter-spacing:-.06em;margin:18px 0 14px;max-width:9ch}
+    .hero-card p{max-width:62ch;color:var(--muted);font-size:1.05rem;margin:0}
+    .hero-tags{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px;position:relative;z-index:2}
+    .tag{padding:8px 11px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--line);font-size:.85rem}
+    .toc-card{padding:24px}
+    .toc-title{font-size:.82rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+    .toc-card a{display:block;padding:12px 14px;border-radius:12px;color:#dde4ee;border:1px solid transparent}
+    .toc-card a:hover{background:rgba(255,255,255,.05);border-color:var(--line)}
+    main{padding-bottom:56px}
+    .section{padding:28px 0}
+    .section-card{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:24px;padding:28px;box-shadow:var(--shadow)}
+    .section-kicker{font-size:.78rem;text-transform:uppercase;letter-spacing:.18em;color:var(--pink);font-weight:800}
+    h2{font-size:clamp(1.8rem,4vw,2.7rem);letter-spacing:-.04em;margin:4px 0 18px}
+    h3{font-size:1.18rem;margin:28px 0 10px;letter-spacing:-.02em}
+    p,li{color:var(--muted)}
+    strong{color:var(--text)}
+    ol,ul{padding-left:1.3rem}
+    li+li{margin-top:7px}
+    .step-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:20px 0}
+    .step{padding:16px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.035)}
+    .step b{display:block;font-size:1.5rem;letter-spacing:-.04em;margin-bottom:4px}
+    .app-link{display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--pink),var(--orange));padding:11px 16px;border-radius:999px;font-weight:800;margin:4px 0 16px}
+    .shot{margin:18px 0 24px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:#fff;box-shadow:0 12px 34px rgba(0,0,0,.28)}
+    .shot img{display:block;width:100%;height:auto}
+    pre{background:#090c11;border:1px solid var(--line);border-radius:18px;padding:20px;overflow:auto;color:#edf3fa;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+    pre code{font-size:.9rem;line-height:1.6}
+    .note{border-left:4px solid var(--orange);padding:14px 16px;background:rgba(255,107,0,.08);border-radius:0 14px 14px 0;color:var(--muted);margin:18px 0}
+    .code-title{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:24px}
+    .code-title span{font-size:.78rem;padding:6px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+    .footer{padding:24px 0 48px;color:var(--muted);font-size:.9rem}
+    .footer-inner{border-top:1px solid var(--line);padding-top:20px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+    @media(max-width:900px){.hero-grid{grid-template-columns:1fr}.step-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:640px){.nav{display:none}.hero{padding-top:24px}.hero-card,.toc-card,.section-card{padding:20px}.step-grid{grid-template-columns:1fr}h1{font-size:clamp(2.7rem,15vw,4.3rem)}}
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <div class="container header-row">
+    <a class="brand" href="index.html"><span class="dot"></span>Pascal's S/4HANA Cloud Knowledge Share</a>
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="#reusable">Reusable Element</a>
+      <a href="#custom-field">Custom Field</a>
+      <a href="#custom-logic">Custom Logic</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="hero-card">
+      <div>
+        <span class="eyebrow">S/4HANA Cloud Public Edition · Sales Kit</span>
+        <h1>Custom Grouping</h1>
+        <p>A practical implementation guide for grouping Sales Kit components using a custom reusable element, custom fields and extensibility logic.</p>
+      </div>
+      <div class="hero-tags">
+        <span class="tag">Sales</span><span class="tag">Outbound Delivery</span><span class="tag">Custom Fields</span><span class="tag">ABAP Cloud</span>
+      </div>
+    </div>
+    <aside class="toc-card">
+      <div class="toc-title">On this page</div>
+      <a href="#reusable">01 · Custom Reusable Element</a>
+      <a href="#structures">02 · Structures</a>
+      <a href="#methods">03 · Methods</a>
+      <a href="#custom-field">04 · Custom Field</a>
+      <a href="#custom-logic">05 · Custom Logic</a>
+    </aside>
+  </div>
+</section>
+
+<main>
+  <section class="section" id="reusable"><div class="container"><div class="section-card">
+    <div class="section-kicker">01 · Foundation</div><h2>Custom Reusable Element</h2>
+    <a class="app-link" href="https://fioriappslibrary.hana.ondemand.com/sap/fix/externalViewer/#/detail/Apps('F3248')/S37" target="_blank" rel="noopener">Open Custom Reusable Elements ↗</a>
+    <p>Add a Custom Library and give it a <code>Name</code> and <code>ID</code>.</p>
+    <div class="shot"><img src="imagery/SCR-20260807-nvwo.png" alt="Give custom library a name and ID"></div>
+    <p>Create the reusable element in this order:</p>
+    <div class="step-grid"><div class="step"><b>01</b>Structures</div><div class="step"><b>02</b>Tables</div><div class="step"><b>03</b>Data</div><div class="step"><b>04</b>Methods</div></div>
+    <div class="shot"><img src="imagery/SCR-20260807-nzhg.png" alt="Custom reusable element creation order"></div>
+    <div class="note">After each step, click <strong>Publish</strong>.</div>
+  </div></div></section>
+
+  <section class="section" id="structures"><div class="container"><div class="section-card">
+    <div class="section-kicker">02 · Data Model</div><h2>Details of Structures</h2>
+    <div class="shot"><img src="imagery/SCR-20260807-ocye.png" alt="Reusable element structure"></div>
+    <h3>Component <code>ITEM_NUMBER</code></h3>
+    <div class="shot"><img src="imagery/SCR-20260807-odwl.png" alt="ITEM_NUMBER component"></div>
+    <h3>Component <code>MATERIAL</code></h3>
+    <div class="shot"><img src="imagery/SCR-20260807-oekf.png" alt="MATERIAL component"></div>
+  </div></div></section>
+
+  <section class="section" id="methods"><div class="container"><div class="section-card">
+    <div class="section-kicker">03 · Reusable Logic</div><h2>Details of Methods</h2>
+    <p>Create two methods and their associated parameters.</p>
+    <h3>Method <code>GET_MATERIAL</code></h3>
+    <ol><li>Parameter <code>IV_POSNR</code></li><li>Parameter <code>RV_MATNR</code> — returning parameter</li></ol>
+    <div class="shot"><img src="imagery/SCR-20260807-ofxa.png" alt="GET_MATERIAL IV_POSNR parameter"></div>
+    <div class="shot"><img src="imagery/SCR-20260807-ogws.png" alt="GET_MATERIAL RV_MATNR parameter"></div>
+    <div class="code-title"><h3>Code for <code>GET_MATERIAL</code></h3><span>ABAP</span></div>
+    <pre><code>DATA ls_row TYPE yy1_zkitbuffer=&gt;ts_kit_item_row.
+
+READ TABLE yy1_zkitbuffer=&gt;kit_buffer
+  WITH KEY item_number = iv_posnr
+  INTO ls_row.
+
+IF sy-subrc = 0.
+  rv_matnr = ls_row-material.
+ENDIF.</code></pre>
+
+    <h3>Method <code>SET_ITEM</code></h3>
+    <ol><li>Parameter <code>IV_POSNR</code></li><li>Parameter <code>IV_MATNR</code></li></ol>
+    <div class="shot"><img src="imagery/SCR-20260807-oici.png" alt="SET_ITEM IV_POSNR parameter"></div>
+    <div class="shot"><img src="imagery/SCR-20260807-oikp.png" alt="SET_ITEM IV_MATNR parameter"></div>
+    <div class="code-title"><h3>Code for <code>SET_ITEM</code></h3><span>ABAP</span></div>
+    <pre><code>DATA ls_row TYPE yy1_zkitbuffer=&gt;ts_kit_item_row.
+
+READ TABLE yy1_zkitbuffer=&gt;kit_buffer
+  WITH KEY item_number = iv_posnr
+  TRANSPORTING NO FIELDS.
+
+IF sy-subrc = 0.
+  DELETE yy1_zkitbuffer=&gt;kit_buffer INDEX sy-tabix.
+ENDIF.
+
+ls_row-item_number = iv_posnr.
+ls_row-material    = iv_matnr.
+INSERT ls_row INTO TABLE yy1_zkitbuffer=&gt;kit_buffer.</code></pre>
+  </div></div></section>
+
+  <section class="section" id="custom-field"><div class="container"><div class="section-card">
+    <div class="section-kicker">04 · Extensibility</div><h2>Custom Field</h2>
+    <a class="app-link" href="https://fioriappslibrary.hana.ondemand.com/sap/fix/externalViewer/#/detail/Apps('F1481')/S37" target="_blank" rel="noopener">Open Custom Fields ↗</a>
+    <p>Create a new custom field.</p>
+    <div class="shot"><img src="imagery/SCR-20260810-lhbs.png" alt="Create a new custom field"></div>
+    <p>When creating the field, select the appropriate <strong>Business Context</strong>.</p>
+    <div class="shot"><img src="imagery/SCR-20260810-lhrr.png" alt="Select the custom field business context"></div>
+    <ul><li>Sales order: <code>SD_SALESDOCITEM - Sales: Sales Document Item</code></li><li>Outbound delivery: <code>LE_SHP_DELIVERYITEM - Shipping: Delivery Item</code></li></ul>
+
+    <h3>Define the field</h3>
+    <p>This example starts in the sales order item context and propagates the field through delivery to billing.</p>
+    <div class="shot"><img src="imagery/SCR-20260810-lkrp-2.png" alt="Custom field specification"></div>
+    <ol><li>Business Context</li><li>User-facing field name</li><li>Technical name — generated in the <code>YY1_</code> customer namespace</li><li>Tooltip</li><li>Technical type</li><li>Field length</li></ol>
+    <div class="note">Dimension the field realistically for the expected content rather than selecting an arbitrary large length.</div>
+    <p>Click <strong>Create and Edit</strong>.</p>
+
+    <h3>Enable usage in business scenarios</h3>
+    <div class="shot"><img src="imagery/SCR-20260810-lrtq.png" alt="Custom field usage configuration"></div>
+    <p>In the <strong>Business Scenarios</strong> tab, enable <code>Sales Document to Delivery on Item Level</code>.</p>
+    <div class="shot"><img src="imagery/SCR-20260810-luzo.png" alt="Sales document to delivery business scenario"></div>
+    <p>The field can also be enabled for form templates and user interfaces where required.</p>
+    <div class="shot"><img src="imagery/SCR-20260810-lyok.png" alt="Sales order form usage"></div>
+    <p>Save the field, return to the main Custom Fields screen and search for your field.</p>
+    <div class="shot"><img src="imagery/SCR-20260810-mbsy.png" alt="Custom field search results"></div>
+
+    <h3>Shipping: Delivery Item context</h3>
+    <p>Open the generated <strong>Shipping: Delivery Item</strong> version of the field.</p>
+    <div class="shot"><img src="imagery/SCR-20260810-mdfe.png" alt="Shipping delivery item field"></div>
+    <p>Enable the <code>Delivery to Billing Document on Item Level</code> scenario.</p>
+    <div class="shot"><img src="imagery/SCR-20260810-meho.png" alt="Delivery to billing business scenario"></div>
+    <p>Enable the required forms and user interfaces, for example the relevant pick-list or delivery-related forms.</p>
+    <div class="shot"><img src="imagery/SCR-20260810-mfej.png" alt="Form template usage"></div>
+    <div class="shot"><img src="imagery/SCR-20260810-mgiz.png" alt="User interface usage"></div>
+    <p>Once complete, you should see the field represented in three contexts: Sales Document Item, Shipping Delivery Item and Billing Document Item.</p>
+    <div class="shot"><img src="imagery/SCR-20260810-mhbj.png" alt="Custom field across three business contexts"></div>
+    <p>Configure the Billing Document Item usage as needed, then select the three fields and click <strong>Publish</strong>.</p>
+    <div class="shot"><img src="imagery/SCR-20260810-mlwn.png" alt="Publish custom fields"></div>
+  </div></div></section>
+
+  <section class="section" id="custom-logic"><div class="container"><div class="section-card">
+    <div class="section-kicker">05 · Implementation</div><h2>Custom Logic</h2>
+    <a class="app-link" href="https://fioriappslibrary.hana.ondemand.com/sap/fix/externalViewer/#/detail/Apps('F6957')/S37" target="_blank" rel="noopener">Open Custom Logic ↗</a>
+
+    <h3>Sales Order extension point</h3>
+    <p>Use extension point <code>SD_SLS_MODIFY_ITEM</code>.</p>
+    <div class="code-title"><h3>Sales Order logic</h3><span>ABAP</span></div>
+    <pre><code>* Only if user is PR
+DATA(lv_user) = cl_abap_context_info=&gt;get_user_technical_name(  ).
+IF lv_user = 'CB9980000235'.
+
+  salesdocumentitem_extension_o = salesdocumentitem_extension_i.
+
+  IF salesdocumentitem-higherlevelitem IS INITIAL.
+    yy1_zkitbuffer=&gt;set_item(
+      iv_posnr = CONV #( salesdocumentitem-salesdocumentitem )
+      iv_matnr = CONV #( salesdocumentitem-material )
+    ).
+  ELSE.
+    " BOM sub-item — retrieve kit header material from buffer
+    DATA(lv_hl_material) = yy1_zkitbuffer=&gt;get_material(
+      iv_posnr = CONV #( salesdocumentitem-higherlevelitem )
+    ).
+
+    IF lv_hl_material IS NOT INITIAL.
+      salesdocumentitem_extension_o-yy1_saleskititem_sdi = lv_hl_material.
+    ENDIF.
+  ENDIF.
+ENDIF.</code></pre>
+
+    <h3>Outbound Delivery extension point</h3>
+    <p>Use extension point <code>LE_SHP_MODIFY_ITEM</code>.</p>
+    <div class="code-title"><h3>Outbound Delivery logic</h3><span>ABAP</span></div>
+    <pre><code>* Only if user is PR
+DATA(lv_user) = cl_abap_context_info=&gt;get_user_technical_name(  ).
+IF lv_user = 'CB9980000235'.
+
+  MOVE-CORRESPONDING delivery_document_in TO delivery_document_out.
+  MOVE-CORRESPONDING delivery_doc_changed_item_in TO delivery_doc_changed_item_out.
+
+  IF delivery_doc_changed_item_in-higherlevelitem IS INITIAL.
+    yy1_zkitbuffer=&gt;set_item(
+      iv_posnr = CONV #( delivery_doc_changed_item_in-deliverydocumentitem )
+      iv_matnr = CONV #( delivery_doc_changed_item_in-material )
+    ).
+  ELSE.
+    " BOM sub-item — retrieve kit header material from buffer
+    DATA(lv_hl_material) = yy1_zkitbuffer=&gt;get_material(
+      iv_posnr = CONV #( delivery_doc_changed_item_in-higherlevelitem )
+    ).
+
+    IF lv_hl_material IS NOT INITIAL.
+      delivery_doc_changed_item_out-ext-yy1_saleskititem_dli =
+        |{ lv_hl_material } { 'KIT' } { delivery_doc_changed_item_in-higherlevelitem }|.
+    ENDIF.
+  ENDIF.
+ENDIF.</code></pre>
+  </div></div></section>
+</main>
+
+<footer class="footer"><div class="container footer-inner"><div>Pascal's S/4HANA Cloud Knowledge Share</div><div>S/4HANA Cloud Public Edition · Sales Kit Custom Grouping</div></div></footer>
+</body>
+</html>
